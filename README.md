@@ -1,6 +1,6 @@
-# Prompt Push: Finding Unknowns for Fable 5
+# Thariq's X article Prompt Skill: Finding Unknowns for Fable 5
 
-This repository contains `prompt-push`, a skill package inspired by Thariq's X article, [A Field Guide to Fable: Finding Your Unknowns](https://x.com/trq212/article/2073100352921215386).
+This repository contains `prompt-push`, a skill inspired by Thariq's X article, [A Field Guide to Fable: Finding Your Unknowns](https://x.com/trq212/article/2073100352921215386).
 
 The article's central idea is simple and powerful: prompts are the map, real work is the territory, and the gap between them is made of unknowns. `prompt-push` turns that idea into a practical skill for rewriting rough user intent into a stronger prompt for another LLM or coding agent.
 
