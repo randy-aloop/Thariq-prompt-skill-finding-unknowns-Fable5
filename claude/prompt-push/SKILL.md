@@ -1,32 +1,30 @@
 ---
 name: prompt-push
-description: Turn a rough, vague, or underspecified prompt into a stronger, ready-to-paste prompt for another LLM or coding agent. Use only when the user explicitly invokes prompt-push by name, says "prompt-push this", asks to use the prompt-push skill, or otherwise clearly calls for prompt-push. Once invoked, support rough intent for coding, design, research, writing, planning, learning, explanation, information gathering, comparison, "what is X", and topic understanding. The output is always a prompt for another model, never the answer to the task itself.
+description: Turn an explicitly invoked prompt-push request into a stronger, ready-to-paste prompt for Claude, Claude Code, another LLM, or another coding agent. Use only when the user names prompt-push, says "prompt-push this", or clearly asks to run/use the prompt-push skill. Once invoked, support coding, design, research, writing, planning, learning, explanation, comparison, "what is X", and information-gathering prompts. Output a prompt for another model, not the answer.
 ---
 
 # Prompt Push
 
-Produce a prompt, not the target task.
+You are producing a prompt, not performing the task. The user will paste your output into Claude, Claude Code, another LLM, or another coding agent. That receiving model may have tools, files, search, or context you do not, so answering the rough prompt yourself wastes the user's turn. Never solve the target task unless the user explicitly asks you to.
 
-The user will paste your output into Claude, Claude Code, another LLM, or another coding agent. The receiving model may have tools, files, search, or context you do not. Do not solve the rough prompt unless the user explicitly asks you to. Write the prompt that makes the receiving model do the work better.
+The goal is not a longer prompt. It is a prompt that carries more direction per line: intent, context, uncertainty handling, and judgment the receiving model can act on.
 
-The goal is not a longer prompt. The goal is more direction per line: intent, context, uncertainty handling, search behavior, and judgment the receiving model can act on.
+The heart of every pushed prompt is making the receiving model surface the user's unknowns: decision forks, hidden requirements, and risks the user couldn't name themselves. A pushed prompt that only restates what the user already knew has failed, however polished it reads.
 
 ## Process
 
-1. **Extract the map.** Identify the goal, domain, audience, target model or agent, desired output, constraints, environment, explicit preferences, implied preferences, and decisions that could change the work.
-2. **Classify unknowns internally.** Do not put this taxonomy into the pushed prompt unless it helps:
+1. **Extract the map.** From the rough prompt, identify: goal, domain, audience, target model or agent, desired output, constraints, environment, explicit and implied preferences, decisions that could change the work, and the user's starting point: their experience with the domain, codebase, or problem. Carry that disclosure into the pushed prompt ("I'm new to the auth modules", "I don't know what color grading is") so the receiving model knows how deep its explanations and blindspot pass should go.
+2. **Classify the unknowns.** This is internal analysis. Do not put this taxonomy into the pushed prompt itself:
    - Known knowns: explicit facts from the rough prompt.
    - Known unknowns: visible open questions.
-   - Unknown knowns: taste and preferences the user may recognize only after seeing options.
-   - Unknown unknowns: hidden risks, domain constraints, missing sources, or better approaches the user may not know to ask about.
-3. **Know the target.** Decide whether the receiving model has tools, search, files, or only chat context.
-4. **Calibrate weight.** Match prompt size to task size.
-5. **Choose a strategy.** Combine strategies when useful.
-6. **Write the pushed prompt.** Run the final checklist.
+   - Unknown knowns: taste and preferences the user will recognize only when they see options.
+   - Unknown unknowns: hidden risks, domain constraints, missing sources, or better approaches the user doesn't know to ask about.
+3. **Choose a strategy** and **calibrate the weight**.
+4. **Write the pushed prompt** and run the final checklist.
 
 ## Calibrate Weight
 
-A small task wrapped in a large template becomes noise.
+Match prompt size to task size; a small task wrapped in a large template becomes noise.
 
 - **Small task**: single decision, clear outcome. Use 3-6 lines: goal, key constraint, ask-vs-proceed rule, output expectation.
 - **Medium task**: a few open decisions. Use goal, context, constraints, 2-3 important unknowns, brief method, output format.
@@ -34,18 +32,23 @@ A small task wrapped in a large template becomes noise.
 
 Never ship the full template by habit. If the rough prompt is already good, tighten it and add only the uncertainty handling it lacks.
 
+## Write Like An Operator
+
+Calibration bounds the length; this bounds the style. Short must not mean vague:
+
+- **Imperative voice.** Verb-first commands ("Check CI history first", "Propose 3 angles, then wait") work better than descriptions of what could be done.
+- **Concrete beats abstract.** Name the specific files, libraries, risks, and checks a domain expert would insist on. Specificity is direction, not bloat.
+- **Default, don't hedge.** When a stack or approach is unknown but guessable, state a concrete default and mark it as an assumption to correct.
+
 ## Know The Target
 
 - **Claude Code or another agent with tools**: it can inspect files, run commands, browse, or search. Route unknowns toward exploration. Reference paths, files, docs, logs, and source material rather than pasting content the agent can open.
-- **Chat model without tools**: inline all needed context. Convert would-be exploration into stated assumptions or questions. Use `[BRACKETED PLACEHOLDERS]` for gaps only the user can fill.
-- **Search-capable model**: add finite search instructions for information, learning, explainer, comparison, current-information, or source-sensitive tasks.
+- **Claude/chat model without tools**: inline all needed context. Convert would-be exploration into stated assumptions or questions. Use `[BRACKETED PLACEHOLDERS]` for gaps only the user can fill.
 - **Unspecified model**: write for a capable general agent.
 
 ## Handling Uncertainty
 
-Every pushed prompt should state when to ask versus proceed.
-
-Default rule:
+Give every pushed prompt an explicit rule for when to ask versus proceed. Default:
 
 ```text
 Ask clarifying questions only when the answer would materially change the architecture, scope, user experience, data model, research direction, risk profile, or final deliverable. Otherwise, make a conservative assumption, state it briefly, and continue.
@@ -60,24 +63,28 @@ Route unknowns:
 - **Reference**: an example communicates the target better than prose.
 - **Proceed and log**: low-risk or reversible.
 
+Balance constraint level as well as routing. Over-specify and the receiving model may follow instructions when a pivot would be better; under-specify and it fills gaps with generic best practices. Constrain what is fixed, leave room where discovery is needed, and say which is which.
+
 ## Strategies
 
 Pick one primary strategy; combine when useful.
 
 ### Blindspot Pass
 
-Use when the user may not know what they do not know.
+Prefer a concrete decision menu over an abstract warning list: name each fork, list realistic options, recommend one, and say why.
 
 ```text
-Before proposing a solution, do a blindspot pass. Identify assumptions, hidden constraints, domain issues, edge cases, and expert questions that could change the work. Separate them into: likely important, possibly important, safe to ignore for now. Then recommend the smallest next step that reduces the most uncertainty.
+Before writing anything, do a blindspot pass and surface the decisions that actually shape this work, as a concrete menu. For each: name the fork, list the realistic options, recommend the one that fits this project, and say why. Include the hidden requirements an expert would insist on and what "done" should include. End by asking me which items are in scope now versus deferred.
 ```
+
+Unless the task is small, include at least a one-line blindspot instruction even when another strategy leads: "First, do a quick blindspot pass and surface anything that would change the work."
 
 ### Finite Search
 
 Use when the user asks for information, learning a topic, explaining a subject/object, comparing options, or understanding a current or source-sensitive area.
 
 ```text
-Do a finite search before answering. Check 3-5 high-quality sources first, prioritizing primary, official, or original sources where available. If the topic remains unclear, continue in focused rounds only while new sources materially change the explanation. Stop when the definition, mechanism, major disagreements, risks, and practical implications stabilize, or when you hit the search budget. Then explain from first principles, separate established facts from uncertainty, and list unresolved unknowns. Do not browse indefinitely.
+Do a finite search before answering. Check 3-5 high-quality sources first, prioritizing primary, official, or original sources. If the topic remains unclear, continue in focused rounds only while new sources materially change the explanation. Stop when the definition, mechanism, major disagreements, risks, and practical implications stabilize, or when you hit the search budget. Then explain from first principles, separate established facts from uncertainty, and list unresolved unknowns. Do not browse indefinitely.
 ```
 
 ### Interview
@@ -117,7 +124,7 @@ Create an implementation plan before editing. Lead with the decisions I am most 
 Use when enough is known and the next agent should act decisively.
 
 ```text
-Proceed with implementation. Make conservative assumptions for non-blocking ambiguity and log them. If you discover an edge case that forces a deviation from the plan, choose the safest local option, record the deviation, and continue unless it would create expensive wrong work.
+Proceed with implementation. Keep an implementation-notes.md file: make conservative assumptions for non-blocking ambiguity and log them there. If you discover an edge case that forces a deviation from the plan, choose the safest local option, record it under "Deviations", and continue unless it would create expensive wrong work. These notes become the map for next time.
 ```
 
 ### Review / Quiz
@@ -125,7 +132,7 @@ Proceed with implementation. Make conservative assumptions for non-blocking ambi
 Use after work is done.
 
 ```text
-Explain the change so I can safely approve it. Include what changed, why, assumptions made, unresolved risks, and how to verify it. Then quiz me on the behavior and tradeoffs. The quiz should test real understanding, not trivia.
+Explain the change so I can safely approve it. Include what changed, why, assumptions made, unresolved risks, and how to verify it. Then quiz me on the behavior and tradeoffs. The quiz should test real understanding, not trivia. If others need to sign off, package the work into one doc that leads with the demo and answers up front the unknowns reviewers will start with.
 ```
 
 ## Full Template
@@ -192,6 +199,7 @@ Before returning, verify the pushed prompt:
 - uses finite search for learning, explainer, comparison, or source-sensitive information tasks when the target can search
 - specifies output format
 - defines an observable quality bar
+- is written as verb-first commands carrying expert-level specifics, not generic advice
 - is calibrated so every section earns its place
 - does not answer the rough prompt itself
 
