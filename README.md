@@ -2,6 +2,8 @@
 
 This repository contains `prompt-push`, a skill inspired by Thariq's X article, [A Field Guide to Fable: Finding Your Unknowns](https://x.com/trq212/article/2073100352921215386).
 
+This version has been iterated and improved with Claude Fable 5 Max, with eval artifacts included below to show how the skill performs against bare Claude model runs.
+
 The article's central idea is simple and powerful: prompts are the map, real work is the territory, and the gap between them is made of unknowns. `prompt-push` turns that idea into a practical skill for rewriting rough user intent into a stronger prompt for another LLM or coding agent.
 
 ## What This Skill Does
