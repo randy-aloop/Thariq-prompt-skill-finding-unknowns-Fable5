@@ -33,53 +33,59 @@ Those gaps show up as:
 
 ```mermaid
 flowchart TD
-    A["Rough user prompt"] --> B["Extract the map\nGoal, domain, audience, target model,\noutput, constraints, environment, preferences"]
-    B --> C["Classify unknowns internally\nKnown knowns / known unknowns /\nunknown knowns / unknown unknowns"]
-    C --> D["Know the target"]
-    D --> D1["Agent with tools\nRoute unknowns to exploration\nReference paths/files"]
-    D --> D2["Chat model without tools\nInline context\nUse bracketed placeholders"]
-    D --> D3["Unspecified\nWrite for capable general agent"]
+    A["Explicit prompt-push invocation"] --> B{"Is the user asking for a better prompt?"}
+    B -- "No" --> Z["Do not trigger\nAnswer normally"]
+    B -- "Yes" --> C["Extract the map\nGoal, domain, audience, target model,\noutput, constraints, files/tools,\npreferences, user's starting point"]
 
-    D1 --> E["Calibrate weight"]
-    D2 --> E
-    D3 --> E
+    C --> D["Classify unknowns internally\nKnown knowns\nKnown unknowns\nUnknown knowns\nUnknown unknowns"]
+    D --> E["Do not expose taxonomy\nTranslate unknowns into plain-language decisions, risks, and forks"]
 
-    E --> E1["Small task\n3-6 lines"]
-    E --> E2["Medium task\nGoal + context + 2-3 unknowns + method"]
-    E --> E3["Large/ambiguous task\nFull template"]
+    E --> F{"Receiving model type"}
+    F --> F1["Agent with tools\nRoute to file/code/docs/web exploration"]
+    F --> F2["Chat model without tools\nInline context and placeholders"]
+    F --> F3["Unspecified\nWrite for capable general agent"]
 
-    E1 --> F["Route uncertainty"]
-    E2 --> F
-    E3 --> F
+    F1 --> G["Calibrate weight"]
+    F2 --> G
+    F3 --> G
 
-    F --> F1["Ask\nUser knows and answer changes work"]
-    F --> F2["Explore\nDiscoverable from files/code/docs/logs/web"]
-    F --> F3["Prototype\nUser knows after seeing options"]
-    F --> F4["Reference\nExample communicates better than prose"]
-    F --> F5["Finite search\nSource-sensitive learning or comparison"]
-    F --> F6["Proceed and log\nLow-risk or reversible"]
+    G --> G1["Small task\n3-6 lines"]
+    G --> G2["Medium task\nGoal + context + key unknowns + method"]
+    G --> G3["Large or ambiguous task\nFull template"]
 
-    F --> G["Choose primary strategy"]
-    G --> G1["Blindspot Pass"]
-    G --> G2["Interview"]
-    G --> G3["Prototype"]
-    G --> G4["Reference"]
-    G --> G5["Finite Search"]
-    G --> G6["Implementation Plan"]
-    G --> G7["Executor"]
-    G --> G8["Review / Quiz"]
-
-    G1 --> H["Write pushed prompt"]
+    G1 --> H["Route uncertainty"]
     G2 --> H
     G3 --> H
-    G4 --> H
-    G5 --> H
-    G6 --> H
-    G7 --> H
-    G8 --> H
 
-    H --> I["Final checklist\nPaste-ready, first action clear,\nask/proceed rule, routed unknowns,\nfinite search when useful,\noutput format, quality bar,\nno solved task"]
-    I --> J["Return response\nDiagnosis / Strategy / Pushed Prompt / Optional Additions"]
+    H --> H1["Ask\nOnly if answer materially changes work"]
+    H --> H2["Explore\nDiscoverable from files/docs/logs/web"]
+    H --> H3["Prototype\nUser will know after seeing options"]
+    H --> H4["Reference\nExample communicates better than prose"]
+    H --> H5["Finite Search\nLearning, explanation, comparison, source-sensitive topics"]
+    H --> H6["Proceed and log\nLow-risk or reversible"]
+
+    H --> I{"Primary strategy"}
+    I --> I1["Blindspot Pass\nSurface decision menu"]
+    I --> I2["Interview\nOne material question at a time"]
+    I --> I3["Prototype\n3-4 concrete directions"]
+    I --> I4["Reference\nTransfer style, behavior, or semantics"]
+    I --> I5["Finite Search\nBounded source search until stable"]
+    I --> I6["Implementation Plan\nReview decisions before edits"]
+    I --> I7["Executor\nAct, log assumptions and deviations"]
+    I --> I8["Review / Quiz\nExplain, package, test understanding"]
+
+    I1 --> J["Write pushed prompt"]
+    I2 --> J
+    I3 --> J
+    I4 --> J
+    I5 --> J
+    I6 --> J
+    I7 --> J
+    I8 --> J
+
+    J --> K["Final checklist\nPaste-ready\nFirst action clear\nAsk/proceed rule\nUnknowns routed\nFinite search when useful\nOutput format\nQuality bar\nNo task solving"]
+
+    K --> L["Return response\nDiagnosis\nStrategy\nPushed Prompt\nOptional Additions"]
 ```
 
 ## Finite Search Behavior
