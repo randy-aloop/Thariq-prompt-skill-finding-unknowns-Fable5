@@ -116,6 +116,11 @@ Full HTML reports:
 - [Opus 4.8 max mode eval](evaluation/eval-opus4.8.html)
 - [Fable 5 max mode eval](evaluation/eval-fable5.html)
 
+Lightweight provenance files:
+
+- Opus 4.8: [benchmark.json](evaluation/opus4.8/benchmark.json) and [benchmark.md](evaluation/opus4.8/benchmark.md)
+- Fable 5: [benchmark.json](evaluation/fable5/benchmark.json) and [benchmark.md](evaluation/fable5/benchmark.md)
+
 | Model / mode | Eval artifact | With skill | Without skill | Gap |
 | --- | --- | ---: | ---: | ---: |
 | Claude Opus 4.8 max mode | [eval-opus4.8.html](evaluation/eval-opus4.8.html) | 23/23 (100%) | 14/23 (59.5%) | +40 points |
@@ -183,6 +188,7 @@ By default, `prompt-push` returns:
 
 - `codex/prompt-push/SKILL.md`: the Codex skill package
 - `claude/prompt-push/SKILL.md`: the Claude-oriented skill package
+- `evaluation/`: rendered HTML eval reports, comparison graphic, and benchmark provenance
 - `README.md`: this overview and attribution
 
 ## Attribution

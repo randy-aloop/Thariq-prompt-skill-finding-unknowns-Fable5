@@ -1,0 +1,440 @@
+{
+  "metadata": {
+    "skill_name": "prompt-push",
+    "skill_path": "<path/to/skill>",
+    "executor_model": "<model-name>",
+    "analyzer_model": "<model-name>",
+    "timestamp": "2026-07-05T22:20:52Z",
+    "evals_run": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "runs_per_configuration": 3
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 7,
+        "failed": 0,
+        "total": 7,
+        "time_seconds": 109.1,
+        "tokens": 35482,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Response contains a fenced, paste-ready prompt block",
+          "passed": true,
+          "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** containing the full copyable prompt, delimited from surrounding prose."
+        },
+        {
+          "text": "Response does not perform the underlying task itself",
+          "passed": true,
+          "evidence": "Whole response instructs Claude Code (explore repo, present menu, implement after confirm); it does not add auth itself."
+        },
+        {
+          "text": "Pushed prompt includes an explicit rule for when to ask vs when to proceed with assumptions",
+          "passed": true,
+          "evidence": "'Ask clarifying questions only when my answer would materially change the data model, UX flow, or security posture. Otherwise make a conservative assumption, state it briefly, and continue.'"
+        },
+        {
+          "text": "Pushed prompt routes discovery to the agent's own tools (inspect repo/files/deps) rather than asking the user everything or guessing",
+          "passed": true,
+          "evidence": "'Explore the repo before proposing anything. Find: the entry point / app factory, whether this is a server-rendered app... the ORM and migration setup... any existing User model...'"
+        },
+        {
+          "text": "Response contains no actual implementation code (no Python/Flask code that performs auth)",
+          "passed": true,
+          "evidence": "No Python/Flask code anywhere; only natural-language instructions and a security baseline listing (argon2/bcrypt, CSRF, cookie flags)."
+        },
+        {
+          "text": "Pushed prompt names concrete auth security specifics (e.g., password hashing algorithm, session/cookie hardening, CSRF) rather than only generic 'secure' language",
+          "passed": true,
+          "evidence": "'hash passwords with argon2 or bcrypt... set Secure, HttpOnly, and SameSite on the session cookie; add CSRF protection to every form (Flask-WTF)... same generic error... rate-limit failed logins...'"
+        },
+        {
+          "text": "Pushed prompt enumerates key auth decision forks as a concrete menu (e.g., auth method, credential/storage model, protected scope, definition of done) with options and a recommendation request, and asks which are in scope now vs deferred",
+          "passed": true,
+          "evidence": "'give me a decision menu... For each fork: list the realistic options, recommend the one that fits... 1. Auth approach... 2. Feature scope... 3. User storage...' then 'ask me which items are in scope now versus deferred.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 80.1,
+        "tokens": 33004,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Response contains a fenced, paste-ready prompt block",
+          "passed": true,
+          "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** with the copyable prompt."
+        },
+        {
+          "text": "Response does not perform the underlying task itself",
+          "passed": true,
+          "evidence": "It instructs the agent to 'Find and fix the typo in my README' and scan the file; it does not itself edit any README."
+        },
+        {
+          "text": "Pushed prompt is calibrated small: roughly 8 lines or fewer inside the fenced block",
+          "passed": true,
+          "evidence": "The fenced block is a single compact paragraph (one logical line of directives), well under the 8-line ceiling."
+        },
+        {
+          "text": "Pushed prompt does NOT contain a full template apparatus (Context/Goal/Constraints/Unknowns/Working method/Quality bar all spelled out)",
+          "passed": true,
+          "evidence": "No labeled sections at all \u2014 one flowing paragraph, and the surrounding prose explicitly says 'Small, clear task \u2014 no template.'"
+        },
+        {
+          "text": "Pushed prompt is written in imperative voice: verb-first commands, not descriptive narration",
+          "passed": true,
+          "evidence": "Verb-first throughout: 'Find and fix... Scan the whole file... Leave code blocks... alone... Don't rewrite... End with a short before -> after list.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 110.3,
+        "tokens": 34960,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Response contains a fenced, paste-ready prompt block",
+          "passed": true,
+          "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** with the full copyable prompt."
+        },
+        {
+          "text": "Response does not perform the underlying task itself",
+          "passed": true,
+          "evidence": "The response instructs the receiving model ('Teach me quantum computing from scratch...'); it does not carry out the teaching itself."
+        },
+        {
+          "text": "Response does not itself explain quantum computing (no substantive physics explanation outside the prompt block)",
+          "passed": true,
+          "evidence": "Prose outside the block is meta only (e.g. Diagnosis notes explainers 'repeat myths'); no substantive explanation of qubits/superposition is delivered outside the fenced prompt."
+        },
+        {
+          "text": "If the pushed prompt asks the target to research/search, it bounds it: finite source count, rounds, or an explicit stop condition",
+          "passed": true,
+          "evidence": "Search is scoped and gated, not open-ended: 'If you can search the web, verify current hardware milestones before citing them; if not, date-stamp those claims' \u2014 'before citing' is the stop condition and scope is limited to verifying milestones."
+        },
+        {
+          "text": "Pushed prompt specifies a concrete default audience/level (stated as a correctable assumption) rather than only a fill-in placeholder or an upfront question",
+          "passed": true,
+          "evidence": "'Assume I'm a curious adult with no physics background and rusty math \u2014 say so up front and correct course if I tell you otherwise, but don't wait to ask: start explaining.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 6,
+        "failed": 0,
+        "total": 6,
+        "time_seconds": 107.2,
+        "tokens": 34897,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Response contains a fenced, paste-ready prompt block",
+          "passed": true,
+          "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** holds the full copyable prompt."
+        },
+        {
+          "text": "Response does not perform the underlying task itself",
+          "passed": true,
+          "evidence": "The response instructs Cursor to explore, propose directions, and implement; it does not redesign the page itself."
+        },
+        {
+          "text": "Pushed prompt requests 2-4 meaningfully different design directions/options before full implementation",
+          "passed": true,
+          "evidence": "'propose 3 meaningfully different visual directions... Build each as the redesigned hero plus one content section... on temporary preview routes... Wait for my pick before touching the production page.'"
+        },
+        {
+          "text": "Response contains no actual HTML/CSS implementation",
+          "passed": true,
+          "evidence": "No HTML/CSS code; frameworks (Tailwind, CSS modules) are named only as things to detect during exploration."
+        },
+        {
+          "text": "Pushed prompt includes an ask-vs-proceed or assumption-logging rule",
+          "passed": true,
+          "evidence": "'Ask me only when the answer would change the design direction or scope... otherwise make a conservative assumption, state it, and continue.' Plus explicit '(Assumption \u2014 tell me if...)' logging."
+        },
+        {
+          "text": "Pushed prompt includes a blindspot instruction (surface anything that would change the work) in addition to requesting design directions",
+          "passed": true,
+          "evidence": "'do a quick blindspot pass: surface anything that would change the work \u2014 SEO meta, analytics events, or form handlers wired into the current markup that a redesign could silently break; missing assets; brand constraints... List what you'll preserve.' \u2014 present alongside the 3-directions request."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.7143,
+        "passed": 5,
+        "failed": 2,
+        "total": 7,
+        "time_seconds": 89.5,
+        "tokens": 28793,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Response contains a fenced, paste-ready prompt block",
+          "passed": true,
+          "evidence": "A ```text ... ``` fenced block under '## Improved prompt' holds the full copyable prompt."
+        },
+        {
+          "text": "Response does not perform the underlying task itself",
+          "passed": true,
+          "evidence": "The prompt directs Claude Code to build auth (User model, blueprint, tests) but the response does not itself write the auth code."
+        },
+        {
+          "text": "Pushed prompt includes an explicit rule for when to ask vs when to proceed with assumptions",
+          "passed": false,
+          "evidence": "Only a single conditional stop-and-ask ('If the app turns out to be a JSON API... stop and ask me whether I want token-based auth'); no general rule governing when to ask versus proceed on assumptions."
+        },
+        {
+          "text": "Pushed prompt routes discovery to the agent's own tools (inspect repo/files/deps) rather than asking the user everything or guessing",
+          "passed": true,
+          "evidence": "'FIRST, explore the codebase before writing any code, and tell me what you find: App structure... Database/ORM in use... Existing templates... How config and secrets are currently handled.'"
+        },
+        {
+          "text": "Response contains no actual implementation code (no Python/Flask code that performs auth)",
+          "passed": true,
+          "evidence": "Route/model specs are described in prose (e.g. 'User model: email (unique, indexed) + password hash'); no runnable Python/Flask code is present."
+        },
+        {
+          "text": "Pushed prompt names concrete auth security specifics (e.g., password hashing algorithm, session/cookie hardening, CSRF) rather than only generic 'secure' language",
+          "passed": true,
+          "evidence": "'Hash with werkzeug.security or bcrypt... CSRF protection on every form; Session cookies: HttpOnly, SameSite=Lax, Secure flag in production... open-redirect' validation."
+        },
+        {
+          "text": "Pushed prompt enumerates key auth decision forks as a concrete menu (e.g., auth method, credential/storage model, protected scope, definition of done) with options and a recommendation request, and asks which are in scope now vs deferred",
+          "passed": false,
+          "evidence": "The prompt pre-decides the fork ('Add session-based user authentication... using Flask-Login') and gives a fixed 'Out of scope' list; it does not present forks as an options menu with a recommendation request or ask which are in scope now vs deferred."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 5,
+        "failed": 0,
+        "total": 5,
+        "time_seconds": 48.0,
+        "tokens": 25132,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Response contains a fenced, paste-ready prompt block",
+          "passed": true,
+          "evidence": "Two fenced code blocks; the primary recommended one is 'Fix the typo in README.md (repo root)... Don't change anything else.'"
+        },
+        {
+          "text": "Response does not perform the underlying task itself",
+          "passed": true,
+          "evidence": "It offers rewritten prompts and commentary on what changed; it does not itself fix any typo."
+        },
+        {
+          "text": "Pushed prompt is calibrated small: roughly 8 lines or fewer inside the fenced block",
+          "passed": true,
+          "evidence": "Primary block is a single line ('Fix the typo in README.md (repo root)... Don't change anything else.'); the alternate proofread block is also one line."
+        },
+        {
+          "text": "Pushed prompt does NOT contain a full template apparatus (Context/Goal/Constraints/Unknowns/Working method/Quality bar all spelled out)",
+          "passed": true,
+          "evidence": "Both blocks are one-line prompts with no labeled sections; the response even adds 'What I deliberately didn't add: No persona, no XML sections.'"
+        },
+        {
+          "text": "Pushed prompt is written in imperative voice: verb-first commands, not descriptive narration",
+          "passed": true,
+          "evidence": "Verb-first: 'Fix the typo in README.md...' / 'Proofread README.md for spelling and grammar mistakes and fix them.'"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.6,
+        "passed": 3,
+        "failed": 2,
+        "total": 5,
+        "time_seconds": 73.7,
+        "tokens": 27044,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Response contains a fenced, paste-ready prompt block",
+          "passed": false,
+          "evidence": "No fenced prompt block anywhere; the response only asks 'Which did you have in mind?' among send/save/answer options."
+        },
+        {
+          "text": "Response does not perform the underlying task itself",
+          "passed": true,
+          "evidence": "It does not explain quantum computing; it merely offers to (option 3) and asks for direction. Clarifying-only response passes this on its own terms."
+        },
+        {
+          "text": "Response does not itself explain quantum computing (no substantive physics explanation outside the prompt block)",
+          "passed": true,
+          "evidence": "No physics content at all; the response is entirely about clarifying what 'push this prompt' means."
+        },
+        {
+          "text": "If the pushed prompt asks the target to research/search, it bounds it: finite source count, rounds, or an explicit stop condition",
+          "passed": true,
+          "evidence": "Vacuously true \u2014 there is no pushed prompt, so the research/search condition never applies."
+        },
+        {
+          "text": "Pushed prompt specifies a concrete default audience/level (stated as a correctable assumption) rather than only a fill-in placeholder or an upfront question",
+          "passed": false,
+          "evidence": "No pushed prompt is produced, so no default audience/level is stated anywhere; the response asks upfront which destination is meant instead."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 4,
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 0.5,
+        "passed": 3,
+        "failed": 3,
+        "total": 6,
+        "time_seconds": 72.5,
+        "tokens": 26707,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Response contains a fenced, paste-ready prompt block",
+          "passed": true,
+          "evidence": "A single ``` fenced block holds the full ready-to-paste Cursor prompt."
+        },
+        {
+          "text": "Response does not perform the underlying task itself",
+          "passed": true,
+          "evidence": "Despite detailed design specs, it is a prompt for Cursor to execute (plan then implement); the response writes no page itself."
+        },
+        {
+          "text": "Pushed prompt requests 2-4 meaningfully different design directions/options before full implementation",
+          "passed": false,
+          "evidence": "It commits to one direction ('modern and clean, in the spirit of Linear, Vercel, and Stripe') with fixed specs; the only checkpoint is 'show me a short plan... and wait for my approval' \u2014 a single-direction plan, not 2-4 options."
+        },
+        {
+          "text": "Response contains no actual HTML/CSS implementation",
+          "passed": true,
+          "evidence": "All specs are prose directives (e.g. '48-72px', 'border radius... 8px', '4/8px spacing scale'); no markup or CSS rules are written."
+        },
+        {
+          "text": "Pushed prompt includes an ask-vs-proceed or assumption-logging rule",
+          "passed": false,
+          "evidence": "No rule governing when to ask vs proceed on assumptions; the plan-then-approve gate is a review checkpoint, and 'placeholders marked TODO' only covers fabricated social proof, not a general assumption-logging rule."
+        },
+        {
+          "text": "Pushed prompt includes a blindspot instruction (surface anything that would change the work) in addition to requesting design directions",
+          "passed": false,
+          "evidence": "It only constrains preservation ('Don't touch routing, forms, analytics') without instructing Cursor to proactively surface anything that would change the work; and it does not request multiple design directions."
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 101.675,
+        "stddev": 14.4398,
+        "min": 80.1,
+        "max": 110.3
+      },
+      "tokens": {
+        "mean": 34585.75,
+        "stddev": 1086.6058,
+        "min": 33004,
+        "max": 35482
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 0.7036,
+        "stddev": 0.2161,
+        "min": 0.5,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 70.925,
+        "stddev": 17.1344,
+        "min": 48.0,
+        "max": 89.5
+      },
+      "tokens": {
+        "mean": 26919.0,
+        "stddev": 1501.7561,
+        "min": 25132,
+        "max": 28793
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.30",
+      "time_seconds": "+30.8",
+      "tokens": "+7667"
+    }
+  },
+  "notes": []
+}
