@@ -97,6 +97,27 @@ It should not ask for infinite search or "search until the bottom." Instead, it 
 
 This makes the receiving model more curious without letting it browse forever.
 
+## Evaluation: Skill vs No Skill
+
+`prompt-push` was tested against bare Claude models on the same prompt-rewriting tasks. The evals measured whether the response stayed a prompt, surfaced meaningful unknowns, avoided premature lock-in, routed taste and search correctly, and returned clean paste-ready output.
+
+| Model / mode | Eval artifact | With skill | Without skill | Gap |
+| --- | --- | ---: | ---: | ---: |
+| Claude Opus 4.8 max mode | `iteration-5/review-opus.html` | 23/23 (100%) | 14/23 (59.5%) | +40 points |
+| Claude Fable 5 max mode | `iteration-6-fable5/eval-fable5.html` | 23/23 (100%) | 17/23 (70.4%) | +30 points |
+
+Main findings:
+
+- **Absorption resistance**: bare Opus collapsed on "push this prompt: explain quantum computing" and wrote the explainer instead of a prompt. Bare Fable failed differently: it asked what "push" meant and produced no prompt. With the skill, both runs interpreted "push" as prompt rewriting.
+- **Fork menus**: without the skill, both models tended to pre-decide important forks, such as choosing Flask-Login up front or locking one landing-page aesthetic. The skill consistently pushed those choices into explicit decision menus.
+- **Taste routing**: without the skill, design prompts often became one prescribed direction. The skill routed taste-heavy work into multiple concrete options for the user to react to.
+- **Paste-ready formatting**: without the skill, some outputs used blockquotes or conversational framing. The skill consistently produced fenced, ready-to-copy prompt blocks.
+- **Calibration**: bare Fable handled the small README typo case as well as the skill, suggesting some calibration behavior is native to the stronger baseline.
+
+Caveat: the assertions encode the quality bar this skill is designed to enforce, so part of the gap measures bare models against the `prompt-push` standard rather than proving the bare outputs were always unusable. The absorption failures and single-direction lock-ins, however, are direct task failures.
+
+Bottom line: across Opus 4.8 and Fable 5, the durable value of the skill is fork-menu discipline, taste routing, absorption/vocabulary anchoring, and paste-ready formatting. Its cost is roughly 5-6k extra tokens per use.
+
 ## Codex Version
 
 The Codex package lives at:
