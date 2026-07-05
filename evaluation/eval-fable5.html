@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "prompt-push (Fable 5)", "runs": [{"id": "eval-1-flask-auth-absorption-trap-with_skill", "prompt": "improve this prompt for claude code: 'add user authentication to my flask app'", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "**Diagnosis**\nThe rough prompt names a destination and nothing else. It leaves Claude Code to guess the three forks that shape everything \u2014 auth approach (sessions vs tokens vs OAuth), feature scope (registration? password reset? roles?), and how users get stored \u2014 and it sets no security bar, so you'd get whatever defaults the model reaches for. Auth touches the data model, every protected route, and your risk profile, which makes silent guessing expensive to unwind.\n\n**Strategy**\nBlindspot Pass as an enumerated decision menu, with the facts routed to exploration (Claude Code can read your repo) and a plan gate before any edits \u2014 the open forks materially change the work, and most context is discoverable in the codebase.\n\n**Pushed Prompt**\n\n```text\nAdd user authentication to this Flask app.\n\nExplore the repo before proposing anything. Find: the entry point / app factory, whether this is a server-rendered app (Jinja templates) or a JSON API, the ORM and migration setup (SQLAlchemy? Flask-Migrate/Alembic?), any existing User model or auth leftovers, and how config and secrets are loaded. Summarize what you find in a few lines.\n\nThen give me a decision menu before writing any code. For each fork: list the realistic options, recommend the one that fits what you found, and say why.\n1. Auth approach \u2014 session-based (Flask-Login) vs token/JWT vs third-party (OAuth/Auth0). Default assumption: session cookies + Flask-Login for a server-rendered app; correct this if the repo says otherwise.\n2. Feature scope \u2014 login/logout only; + registration; + password reset; + email verification; + \"remember me\"; + roles/admin. Recommend a minimal first slice and what to defer.\n3. User storage \u2014 new User model + migration vs adapting an existing table.\nEnd the menu by asking me which items are in scope now versus deferred.\n\nTreat this security baseline as non-negotiable whatever I pick: hash passwords with argon2 or bcrypt (never unsalted or reversible); set Secure, HttpOnly, and SameSite on the session cookie; add CSRF protection to every form (Flask-WTF); return the same generic error for unknown email and wrong password so accounts can't be enumerated; log or rate-limit failed logins; load SECRET_KEY from the environment \u2014 and flag it if the repo hardcodes secrets today.\n\nAsk clarifying questions only when my answer would materially change the data model, UX flow, or security posture. Otherwise make a conservative assumption, state it briefly, and continue.\n\nOnce I confirm scope: share a short implementation plan (files to add/change, the migration, which routes get protected), wait for my OK, then implement. Protect at least one existing route with @login_required as an end-to-end proof. Finish with the steps for me to register and log in locally, plus tests covering a successful login, a failed login, and a protected route rejecting an anonymous request.\n```\n\n**Optional Additions**\n1. Say whether the app serves rendered pages or is an API for a separate frontend \u2014 that one fact settles the sessions-vs-tokens fork before the agent starts.\n2. Name the features you already know you need (e.g., \"just login/logout; I'll create accounts manually\") \u2014 it collapses the scope menu into a confirmation.\n3. Mention whether real users or production data already exist \u2014 that changes how carefully migrations must be handled and whether password reset ships in slice one.\n"}], "grading": {"expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** containing the full copyable prompt, delimited from surrounding prose."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "Whole response instructs Claude Code (explore repo, present menu, implement after confirm); it does not add auth itself."}, {"text": "Pushed prompt includes an explicit rule for when to ask vs when to proceed with assumptions", "passed": true, "evidence": "'Ask clarifying questions only when my answer would materially change the data model, UX flow, or security posture. Otherwise make a conservative assumption, state it briefly, and continue.'"}, {"text": "Pushed prompt routes discovery to the agent's own tools (inspect repo/files/deps) rather than asking the user everything or guessing", "passed": true, "evidence": "'Explore the repo before proposing anything. Find: the entry point / app factory, whether this is a server-rendered app... the ORM and migration setup... any existing User model...'"}, {"text": "Response contains no actual implementation code (no Python/Flask code that performs auth)", "passed": true, "evidence": "No Python/Flask code anywhere; only natural-language instructions and a security baseline listing (argon2/bcrypt, CSRF, cookie flags)."}, {"text": "Pushed prompt names concrete auth security specifics (e.g., password hashing algorithm, session/cookie hardening, CSRF) rather than only generic 'secure' language", "passed": true, "evidence": "'hash passwords with argon2 or bcrypt... set Secure, HttpOnly, and SameSite on the session cookie; add CSRF protection to every form (Flask-WTF)... same generic error... rate-limit failed logins...'"}, {"text": "Pushed prompt enumerates key auth decision forks as a concrete menu (e.g., auth method, credential/storage model, protected scope, definition of done) with options and a recommendation request, and asks which are in scope now vs deferred", "passed": true, "evidence": "'give me a decision menu... For each fork: list the realistic options, recommend the one that fits... 1. Auth approach... 2. Feature scope... 3. User storage...' then 'ask me which items are in scope now versus deferred.'"}], "summary": {"passed": 7, "failed": 0, "total": 7, "pass_rate": 1.0}}}, {"id": "eval-1-flask-auth-absorption-trap-without_skill", "prompt": "improve this prompt for claude code: 'add user authentication to my flask app'", "eval_id": 1, "outputs": [{"name": "response.md", "type": "text", "content": "Here's an improved version. The original \u2014 \"add user authentication to my flask app\" \u2014 forces Claude Code to guess at the auth strategy, scope, security requirements, and definition of done. For security-critical code, those guesses are exactly where things go wrong.\n\n## Improved prompt\n\n```text\nAdd session-based user authentication to my Flask app using Flask-Login.\n\nFIRST, explore the codebase before writing any code, and tell me what you find:\n- App structure (single module vs. app factory / blueprints)\n- Database/ORM in use (SQLAlchemy? Flask-Migrate? none yet?)\n- Existing templates, base layout, and styling conventions\n- How config and secrets are currently handled\nIf the app turns out to be a JSON API with no templates, stop and ask me\nwhether I want token-based auth instead of sessions.\n\nTHEN implement:\n\n1. User model: email (unique, indexed) + password hash.\n   - Hash with werkzeug.security or bcrypt \u2014 never store plaintext.\n   - Add an Alembic/Flask-Migrate migration if the project uses one.\n\n2. An `auth` blueprint with routes:\n   - GET/POST /register \u2014 server-side validation (valid email format,\n     password min 8 chars), friendly error on duplicate email\n   - GET/POST /login \u2014 with \"remember me\"; on failure show a generic\n     \"invalid email or password\" (don't reveal which one was wrong)\n   - POST /logout \u2014 login required\n\n3. Templates for register/login that extend my existing base template\n   and match its styling. Use Flask-WTF for forms.\n\n4. Protect these existing routes with @login_required: [LIST YOUR ROUTES,\n   e.g. /dashboard, /settings]. Redirect logged-out users to /login with\n   a `next` param \u2014 validate that `next` is a relative URL so there's no\n   open-redirect vulnerability.\n\n5. Security requirements (non-negotiable):\n   - CSRF protection on every form\n   - Session cookies: HttpOnly, SameSite=Lax, Secure flag in production\n   - SECRET_KEY loaded from an environment variable, never hardcoded\n\n6. Tests (pytest): registration success, duplicate email rejected,\n   login success/failure, logout, protected route redirects when\n   anonymous and returns 200 when logged in. Run the full test suite\n   and don't finish until everything passes.\n\nConstraints:\n- Dependencies: Flask-Login and Flask-WTF only (plus what's already\n  installed). No Flask-Security, no OAuth stack.\n- Don't restructure existing code beyond what's needed; follow the\n  project's existing conventions.\n- Out of scope (do NOT build): password reset emails, email verification,\n  OAuth/social login, roles/permissions. Just don't design in a way that\n  blocks adding them later.\n\nShow me a short plan of the files you'll create/modify before you start.\n```\n\n## What changed and why\n\n| Change | Why it matters |\n|---|---|\n| Named a strategy and library (sessions + Flask-Login) | \"Authentication\" could mean sessions, JWT, OAuth, or magic links. This ambiguity is the most likely cause of a full rewrite. |\n| \"Explore the codebase first\" | Claude Code is agentic \u2014 directing it to inspect your structure, ORM, and templates first makes the new code fit *your* app instead of a generic tutorial app. |\n| Route-by-route spec | Turns \"authentication\" into checkable requirements rather than whatever the model considers standard. |\n| Explicit security requirements | Password hashing, CSRF, cookie flags, open-redirect validation, and generic login errors are precisely the details that get silently omitted from quick implementations. |\n| Tests + \"run until green\" | Gives Claude Code a self-verifiable definition of done, so it catches its own mistakes before you review. |\n| Constraints and out-of-scope list | Prevents over-engineering (full Flask-Security, roles, email infrastructure) that you'd otherwise have to review, secure, and maintain. |\n| Plan checkpoint before coding | Cheap insurance: you approve the file-level approach before anything is touched. |\n\n## Before you run it\n\n- Replace `[LIST YOUR ROUTES...]` with the actual routes to protect.\n- If you already know your stack, paste it in place of the exploration step (e.g. \"App factory pattern, SQLAlchemy + Postgres, Flask-Migrate, Jinja templates in /templates\") \u2014 first-hand context beats discovery.\n- If your app is actually an API backing a React/mobile frontend, swap the approach: \"use JWT via flask-jwt-extended, no templates, return 401 JSON instead of redirects.\"\n- Tip: run this in plan mode (Shift+Tab in Claude Code) so the \"plan before coding\" step is enforced by the tool, not just the prompt. And consider putting your stack details in `CLAUDE.md` so future prompts don't need to repeat them.\n"}], "grading": {"expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A ```text ... ``` fenced block under '## Improved prompt' holds the full copyable prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "The prompt directs Claude Code to build auth (User model, blueprint, tests) but the response does not itself write the auth code."}, {"text": "Pushed prompt includes an explicit rule for when to ask vs when to proceed with assumptions", "passed": false, "evidence": "Only a single conditional stop-and-ask ('If the app turns out to be a JSON API... stop and ask me whether I want token-based auth'); no general rule governing when to ask versus proceed on assumptions."}, {"text": "Pushed prompt routes discovery to the agent's own tools (inspect repo/files/deps) rather than asking the user everything or guessing", "passed": true, "evidence": "'FIRST, explore the codebase before writing any code, and tell me what you find: App structure... Database/ORM in use... Existing templates... How config and secrets are currently handled.'"}, {"text": "Response contains no actual implementation code (no Python/Flask code that performs auth)", "passed": true, "evidence": "Route/model specs are described in prose (e.g. 'User model: email (unique, indexed) + password hash'); no runnable Python/Flask code is present."}, {"text": "Pushed prompt names concrete auth security specifics (e.g., password hashing algorithm, session/cookie hardening, CSRF) rather than only generic 'secure' language", "passed": true, "evidence": "'Hash with werkzeug.security or bcrypt... CSRF protection on every form; Session cookies: HttpOnly, SameSite=Lax, Secure flag in production... open-redirect' validation."}, {"text": "Pushed prompt enumerates key auth decision forks as a concrete menu (e.g., auth method, credential/storage model, protected scope, definition of done) with options and a recommendation request, and asks which are in scope now vs deferred", "passed": false, "evidence": "The prompt pre-decides the fork ('Add session-based user authentication... using Flask-Login') and gives a fixed 'Out of scope' list; it does not present forks as an options menu with a recommendation request or ask which are in scope now vs deferred."}], "summary": {"passed": 5, "failed": 2, "total": 7, "pass_rate": 0.7143}}}, {"id": "eval-2-readme-typo-calibration-trap-with_skill", "prompt": "make this prompt better: 'fix the typo in my readme'", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "**Diagnosis**\n\"The typo\" assumes the agent knows which file and which error \u2014 it knows neither. The singular phrasing invites the agent to stop at the first plausible hit, and with no boundaries an eager model over-corrects: rewriting phrasing, \"fixing\" code snippets or deliberate brand spellings, or inventing an error if it can't find one. There's also no output expectation, so you can't verify the change at a glance.\n\n**Strategy**\nSmall, clear task \u2014 no template. A tight direct prompt that routes finding the typo to the agent's own scan, adds guardrails against over-editing, and asks for a verifiable before/after.\n\n**Pushed Prompt**\n\n```text\nFind and fix the typo in my README (README.md at the repo root \u2014 if there are several READMEs, do the root one and note the rest). Scan the whole file and fix every clear spelling or grammar error, not just the first one you hit. Leave code blocks, commands, URLs, and proper nouns alone; if a word might be intentional (jargon, a CLI flag, a brand spelling), flag it instead of changing it. Don't rewrite style or reformat \u2014 the diff should touch only the typos. If you find no genuine typo, say so rather than inventing one. End with a short before \u2192 after list of each change.\n```\n\n**Optional Additions**\n- If you remember the word or section, name it \u2014 that turns a full scan into a pinpoint fix.\n- If your repo has more than one README (docs/, packages/*), say which one you mean.\n- Mention any intentional spellings (product names, stylized lowercase) the agent shouldn't \"correct.\"\n"}], "grading": {"expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** with the copyable prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "It instructs the agent to 'Find and fix the typo in my README' and scan the file; it does not itself edit any README."}, {"text": "Pushed prompt is calibrated small: roughly 8 lines or fewer inside the fenced block", "passed": true, "evidence": "The fenced block is a single compact paragraph (one logical line of directives), well under the 8-line ceiling."}, {"text": "Pushed prompt does NOT contain a full template apparatus (Context/Goal/Constraints/Unknowns/Working method/Quality bar all spelled out)", "passed": true, "evidence": "No labeled sections at all \u2014 one flowing paragraph, and the surrounding prose explicitly says 'Small, clear task \u2014 no template.'"}, {"text": "Pushed prompt is written in imperative voice: verb-first commands, not descriptive narration", "passed": true, "evidence": "Verb-first throughout: 'Find and fix... Scan the whole file... Leave code blocks... alone... Don't rewrite... End with a short before -> after list.'"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "eval-2-readme-typo-calibration-trap-without_skill", "prompt": "make this prompt better: 'fix the typo in my readme'", "eval_id": 2, "outputs": [{"name": "response.md", "type": "text", "content": "# Improved prompt\n\nThe original isn't weak because it's short \u2014 it's weak because it's ambiguous. The assistant has to guess which file \"my readme\" is and which typo \"the typo\" is. Fix those two things and you're done; a task this small doesn't need roles, output formats, or step-by-step scaffolding.\n\n**If you know exactly what the typo is:**\n\n```\nFix the typo in README.md (repo root): in the Installation section, \"recieve\" should be \"receive\". Don't change anything else.\n```\n\n(Swap in your actual file path, section, and typo.)\n\n**If you actually want it to find typos for you** \u2014 that's a different task, so say so:\n\n```\nProofread README.md for spelling and grammar mistakes and fix them. Keep the wording, tone, and formatting otherwise unchanged, and list every change you made.\n```\n\n## What changed and why\n\n- **\"README.md (repo root)\" instead of \"my readme\"** \u2014 projects often have several readmes (`docs/`, `packages/*`, etc.). Naming the file removes the guess.\n- **The typo itself is named** \u2014 \"the typo\" points at something only you can see. Either state it, or convert the task into a proofread.\n- **\"Don't change anything else\"** \u2014 blocks the classic failure mode where the model fixes the typo and then \"improves\" three paragraphs you didn't ask about.\n- **\"List every change you made\"** (proofread variant) \u2014 makes the result cheap to verify.\n\n## What I deliberately didn't add\n\nNo persona, no XML sections, no \"think step by step.\" Extra scaffolding on a one-line edit task adds nothing and just gives the model more surface area to drift. Match the prompt's weight to the task's weight \u2014 what was missing here was specificity, not structure.\n"}], "grading": {"expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "Two fenced code blocks; the primary recommended one is 'Fix the typo in README.md (repo root)... Don't change anything else.'"}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "It offers rewritten prompts and commentary on what changed; it does not itself fix any typo."}, {"text": "Pushed prompt is calibrated small: roughly 8 lines or fewer inside the fenced block", "passed": true, "evidence": "Primary block is a single line ('Fix the typo in README.md (repo root)... Don't change anything else.'); the alternate proofread block is also one line."}, {"text": "Pushed prompt does NOT contain a full template apparatus (Context/Goal/Constraints/Unknowns/Working method/Quality bar all spelled out)", "passed": true, "evidence": "Both blocks are one-line prompts with no labeled sections; the response even adds 'What I deliberately didn't add: No persona, no XML sections.'"}, {"text": "Pushed prompt is written in imperative voice: verb-first commands, not descriptive narration", "passed": true, "evidence": "Verb-first: 'Fix the typo in README.md...' / 'Proofread README.md for spelling and grammar mistakes and fix them.'"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "eval-3-quantum-research-chat-target-with_skill", "prompt": "push this prompt: 'explain quantum computing to me'", "eval_id": 3, "outputs": [{"name": "response.md", "type": "text", "content": "**Diagnosis**\n\n\"Explain quantum computing to me\" gives the receiving model nothing to aim at: no level, no purpose, no depth or format preference. Left alone, it will produce a generic mid-depth explainer \u2014 and quantum computing explainers are unusually prone to repeating myths (\"it tries every answer at once\") and hype about current hardware. You also have no way to steer the depth once the answer arrives.\n\n**Strategy**\n\nProceed on a stated audience assumption instead of interviewing, and route the depth/taste unknown through a layered explanation (a Prototype variant \u2014 you find your level by reacting to it), with guardrails against the field's standard misconceptions.\n\n**Pushed Prompt**\n\n```text\nTeach me quantum computing from scratch. Assume I'm a curious adult with no physics background and rusty math \u2014 say so up front and correct course if I tell you otherwise, but don't wait to ask: start explaining.\n\nStructure it in three layers, each self-contained:\n1. Core intuition, no math: what a qubit is, what superposition and entanglement actually mean, and why interference \u2014 not \"trying every answer at once\" \u2014 is where the power comes from.\n2. One level deeper: why quantum computers beat classical ones only on specific problem classes (factoring, simulating molecules and materials, certain search and optimization problems) and offer no speedup for most everyday computing.\n3. Reality check: where hardware actually stands today \u2014 qubit counts vs. error rates, why error correction (many noisy physical qubits per one reliable logical qubit) is the real bottleneck, and what \"quantum advantage\" announcements do and don't prove.\n\nRules:\n- Attack the common myths head-on (\"it tries all answers in parallel\", \"it will break all encryption tomorrow\") and say exactly what's wrong with each.\n- Use one concrete running example (factoring or molecule simulation) instead of scattered metaphors; when you use an analogy, say where it breaks down.\n- Separate settled science from fast-moving engineering claims. If you can search the web, verify current hardware milestones before citing them; if not, date-stamp those claims with your knowledge cutoff.\n- Don't invent numbers, papers, or company claims \u2014 say \"I'm not certain\" where you're not.\n\nQuality bar: when you're done, I should be able to explain to someone else why a quantum computer isn't just a faster computer, and name one problem it helps with and one it doesn't.\n\nEnd with a short menu of directions to go deeper \u2014 the actual math of qubits, how the hardware works, what it means for encryption, how to run one online today \u2014 plus anything important I didn't know to ask about. Ask which I want next.\n```\n\n**Optional Additions**\n\n1. Your background in one line (comfort with math, physics, or programming) and why you're asking \u2014 swap it in for the assumption at the top of the prompt.\n2. The format you want: a single 10-minute read, or an interactive back-and-forth tutorial.\n3. Whatever triggered the question (a news story, a work decision, worry about encryption) so the explanation can anchor to something real.\n"}], "grading": {"expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** with the full copyable prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "The response instructs the receiving model ('Teach me quantum computing from scratch...'); it does not carry out the teaching itself."}, {"text": "Response does not itself explain quantum computing (no substantive physics explanation outside the prompt block)", "passed": true, "evidence": "Prose outside the block is meta only (e.g. Diagnosis notes explainers 'repeat myths'); no substantive explanation of qubits/superposition is delivered outside the fenced prompt."}, {"text": "If the pushed prompt asks the target to research/search, it bounds it: finite source count, rounds, or an explicit stop condition", "passed": true, "evidence": "Search is scoped and gated, not open-ended: 'If you can search the web, verify current hardware milestones before citing them; if not, date-stamp those claims' \u2014 'before citing' is the stop condition and scope is limited to verifying milestones."}, {"text": "Pushed prompt specifies a concrete default audience/level (stated as a correctable assumption) rather than only a fill-in placeholder or an upfront question", "passed": true, "evidence": "'Assume I'm a curious adult with no physics background and rusty math \u2014 say so up front and correct course if I tell you otherwise, but don't wait to ask: start explaining.'"}], "summary": {"passed": 5, "failed": 0, "total": 5, "pass_rate": 1.0}}}, {"id": "eval-3-quantum-research-chat-target-without_skill", "prompt": "push this prompt: 'explain quantum computing to me'", "eval_id": 3, "outputs": [{"name": "response.md", "type": "text", "content": "I don't have a configured destination for \"pushing\" prompts, so I want to check what you mean before I do anything.\n\nA few possibilities:\n\n1. **Send it to a chat app or AI in your browser** \u2014 if you have a chat window open (Claude, ChatGPT, a research chat, etc.), I can navigate there, type \"explain quantum computing to me\", and send it. Just tell me which tab or app.\n2. **Save it somewhere** \u2014 e.g., add it to a prompt file or library in one of your connected folders. Tell me which file or folder.\n3. **Just answer it here** \u2014 if you actually want the explanation, I can explain quantum computing directly in this chat.\n\nWhich did you have in mind?\n"}], "grading": {"expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": false, "evidence": "No fenced prompt block anywhere; the response only asks 'Which did you have in mind?' among send/save/answer options."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "It does not explain quantum computing; it merely offers to (option 3) and asks for direction. Clarifying-only response passes this on its own terms."}, {"text": "Response does not itself explain quantum computing (no substantive physics explanation outside the prompt block)", "passed": true, "evidence": "No physics content at all; the response is entirely about clarifying what 'push this prompt' means."}, {"text": "If the pushed prompt asks the target to research/search, it bounds it: finite source count, rounds, or an explicit stop condition", "passed": true, "evidence": "Vacuously true \u2014 there is no pushed prompt, so the research/search condition never applies."}, {"text": "Pushed prompt specifies a concrete default audience/level (stated as a correctable assumption) rather than only a fill-in placeholder or an upfront question", "passed": false, "evidence": "No pushed prompt is produced, so no default audience/level is stated anywhere; the response asks upfront which destination is meant instead."}], "summary": {"passed": 3, "failed": 2, "total": 5, "pass_rate": 0.6}}}, {"id": "eval-4-landing-page-taste-routing-with_skill", "prompt": "i want a prompt for cursor to redesign my landing page, something modern and clean", "eval_id": 4, "outputs": [{"name": "response.md", "type": "text", "content": "**Diagnosis** \u2014 \"Modern and clean\" is taste language: ten designers would render it ten different ways, and Cursor will lock in one interpretation on its own unless the prompt routes that choice back to you. Scope is also ambiguous (restyle? rebuild? rewrite copy?), and the rough prompt never mentions the one thing a landing page exists for \u2014 conversion \u2014 so a prettier-but-worse-converting page is the default failure mode. Redesigns also silently break things wired into markup: analytics events, SEO meta, form handlers.\n\n**Strategy** \u2014 Prototype leads: taste is something you'll recognize on sight, so the prompt makes Cursor build 3 comparable directions before committing; exploration handles stack and context (Cursor can read the repo), and a blindspot pass catches the break-risks.\n\n**Pushed Prompt**\n\n```text\nRedesign this repo's landing page. Target: modern and clean \u2014 but I'll choose the specific direction from options you show me, so don't lock in your own interpretation.\n\nExplore first: locate the landing page entry point, the framework and styling approach (Tailwind, CSS modules, styled-components \u2014 whatever is actually here), any existing design tokens, fonts, or component library, and the page's current sections and primary CTA. Work within the existing stack; don't introduce a new CSS framework or UI library unless the current setup makes the redesign impractical \u2014 flag it first if so.\n\nThen do a quick blindspot pass: surface anything that would change the work \u2014 SEO meta, analytics events, or form handlers wired into the current markup that a redesign could silently break; missing assets; brand constraints implied by the codebase. List what you'll preserve.\n\nNext, propose 3 meaningfully different visual directions that fit what this product actually is \u2014 for example: stark minimalist (generous whitespace, near-mono palette, strong type scale), soft modern SaaS (subtle gradients, rounded cards, friendly type), dark high-contrast product style. One line each on the vibe and its tradeoff. Build each as the redesigned hero plus one content section, using the real copy, on temporary preview routes (/preview/a, /preview/b, /preview/c \u2014 or whatever preview mechanism is cleanest in this stack) so I can compare in the browser. Wait for my pick before touching the production page.\n\nAfter I choose, roll that direction out across the full page. Non-negotiables regardless of direction:\n- Keep the existing copy and meaning; redesign layout and hierarchy, don't rewrite messaging. (Assumption \u2014 tell me if you think the copy itself is the weak point.)\n- Preserve the conversion path: one clear primary CTA above the fold, deliberate section hierarchy, social proof kept if present.\n- Mobile-first responsive; verify at 375px, 768px, and 1440px.\n- Accessible: semantic HTML, WCAG AA contrast, visible focus states, prefers-reduced-motion respected on any animation.\n- Fast: optimized images, no new heavy dependencies; keep current fonts unless a new one is central to the chosen direction.\n- Don't break existing routes, meta tags, analytics, or form submissions.\n\nAsk me only when the answer would change the design direction or scope (mandatory brand colors, copy rewrite, dropping a section); otherwise make a conservative assumption, state it, and continue. Finish with a short summary: what changed, assumptions made, and how to remove the preview routes.\n```\n\n**Optional Additions**\n1. Two or three links to landing pages whose look you envy \u2014 a reference beats \"modern and clean,\" and I'd rewrite the prompt to transfer style from them.\n2. Brand constraints, if any: mandatory colors, fonts, logo treatment \u2014 or an explicit \"no constraints, go wild.\"\n3. The page's one job (signups? demo bookings? waitlist?) and whether the copy itself is fair game for rewriting.\n"}], "grading": {"expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** holds the full copyable prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "The response instructs Cursor to explore, propose directions, and implement; it does not redesign the page itself."}, {"text": "Pushed prompt requests 2-4 meaningfully different design directions/options before full implementation", "passed": true, "evidence": "'propose 3 meaningfully different visual directions... Build each as the redesigned hero plus one content section... on temporary preview routes... Wait for my pick before touching the production page.'"}, {"text": "Response contains no actual HTML/CSS implementation", "passed": true, "evidence": "No HTML/CSS code; frameworks (Tailwind, CSS modules) are named only as things to detect during exploration."}, {"text": "Pushed prompt includes an ask-vs-proceed or assumption-logging rule", "passed": true, "evidence": "'Ask me only when the answer would change the design direction or scope... otherwise make a conservative assumption, state it, and continue.' Plus explicit '(Assumption \u2014 tell me if...)' logging."}, {"text": "Pushed prompt includes a blindspot instruction (surface anything that would change the work) in addition to requesting design directions", "passed": true, "evidence": "'do a quick blindspot pass: surface anything that would change the work \u2014 SEO meta, analytics events, or form handlers wired into the current markup that a redesign could silently break; missing assets; brand constraints... List what you'll preserve.' \u2014 present alongside the 3-directions request."}], "summary": {"passed": 6, "failed": 0, "total": 6, "pass_rate": 1.0}}}, {"id": "eval-4-landing-page-taste-routing-without_skill", "prompt": "i want a prompt for cursor to redesign my landing page, something modern and clean", "eval_id": 4, "outputs": [{"name": "response.md", "type": "text", "content": "Here's a ready-to-paste prompt for Cursor. It works best in Agent mode so Cursor can read your existing code first. Fill in the one bracketed line before sending.\n\n```\nRedesign the landing page in this repo. Before writing any code, read the current landing page and note the framework, styling approach (Tailwind, CSS modules, etc.), and reusable components \u2014 keep the existing stack, don't introduce a new styling system.\n\nContext: [The product is ___, the audience is ___, and the #1 action I want visitors to take is ___.]\n\nDESIGN DIRECTION \u2014 modern and clean, in the spirit of Linear, Vercel, and Stripe (restrained and confident, not a template):\n\nTypography\n- One typeface (Inter, Geist, or system stack) with clear hierarchy: large hero headline (48\u201372px desktop, tight tracking, ~1.1 line-height), medium section headings, 16\u201318px body with relaxed line-height.\n- Max 3 visible font sizes per viewport. Create hierarchy with size, weight, and color \u2014 not decoration.\n\nColor\n- Near-white or near-black base (not pure #fff/#000), one neutral gray scale, and exactly ONE accent color used sparingly (primary CTA, links, small highlights).\n- No gradient text, no purple-to-blue startup gradients, no neon glows, no glassmorphism.\n\nSpacing & layout\n- Consistent 4/8px spacing scale. Generous whitespace: 96\u2013160px vertical section padding on desktop.\n- Max content width ~1100\u20131200px, centered container. Hero copy capped around 60ch.\n- Don't center-align everything \u2014 alternate left-aligned sections for rhythm.\n\nComponents & detail\n- Subtle 1px low-contrast borders and soft shadows instead of heavy card shadows.\n- One consistent border radius everywhere (e.g., 8px).\n- Two button styles only: solid primary, quiet secondary (outline/ghost). Clear hover and focus states with 150\u2013200ms ease transitions.\n- Motion only where it adds clarity: hover states and a gentle fade/slide-up on section entrance. Respect prefers-reduced-motion. Nothing bouncy.\n\nPage structure (adapt to my existing content)\n1. Slim nav: logo left, few links, one CTA right; optional translucent blur on scroll.\n2. Hero: benefit-driven headline (never \"Welcome to X\"), one-line subhead, primary CTA + quiet secondary link, one strong visual (product screenshot in a subtle frame).\n3. Muted social-proof strip (grayscale logos or one metric).\n4. 3\u20134 feature sections with alternating layouts and concrete, benefit-led headings.\n5. One focused CTA section near the end.\n6. Minimal footer.\n\nDO NOT\n- Use emoji in headings or feature cards, or generic icon soup.\n- Invent fake testimonials, metrics, or real-company logos \u2014 use neutral placeholders marked TODO.\n- Rewrite my copy beyond light tightening; suggest bigger copy changes separately.\n- Add new dependencies for anything CSS can do; no heavy animation libraries.\n- Touch routing, forms, analytics, or data logic \u2014 this is a visual/structural redesign only.\n\nTechnical requirements\n- Mobile-first responsive; verify at 375px, 768px, and 1440px with no horizontal scroll.\n- Semantic HTML (header/main/section/footer, exactly one h1), WCAG AA contrast, visible focus states, alt text on images.\n- Fast: optimized/lazy-loaded images, no layout shift, system or variable fonts.\n\nProcess: First show me a short plan \u2014 section order, exact hex palette, and type scale \u2014 and wait for my approval. Then implement section by section, starting with the nav and hero, so I can review as you go.\n```\n\n**Tips for better results**\n\n- **Fill in the context line** \u2014 it's the highest-leverage part. A redesign that doesn't know what the page sells will always look generic.\n- **Attach a screenshot** of your current page and/or 1\u20132 reference sites you like (Cursor accepts images). Swap out Linear/Vercel/Stripe for your own taste if it differs.\n- **Prefer the two-step process** (plan \u2192 build). If you'd rather one-shot it, delete the final \"Process\" paragraph.\n- **Iterate specifically.** If a section looks off, say what's wrong (\"hero headline too small, too much color in the feature cards\") rather than \"make it better.\"\n- Commit before you start so you can diff or revert the redesign easily.\n"}], "grading": {"expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ``` fenced block holds the full ready-to-paste Cursor prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "Despite detailed design specs, it is a prompt for Cursor to execute (plan then implement); the response writes no page itself."}, {"text": "Pushed prompt requests 2-4 meaningfully different design directions/options before full implementation", "passed": false, "evidence": "It commits to one direction ('modern and clean, in the spirit of Linear, Vercel, and Stripe') with fixed specs; the only checkpoint is 'show me a short plan... and wait for my approval' \u2014 a single-direction plan, not 2-4 options."}, {"text": "Response contains no actual HTML/CSS implementation", "passed": true, "evidence": "All specs are prose directives (e.g. '48-72px', 'border radius... 8px', '4/8px spacing scale'); no markup or CSS rules are written."}, {"text": "Pushed prompt includes an ask-vs-proceed or assumption-logging rule", "passed": false, "evidence": "No rule governing when to ask vs proceed on assumptions; the plan-then-approve gate is a review checkpoint, and 'placeholders marked TODO' only covers fabricated social proof, not a general assumption-logging rule."}, {"text": "Pushed prompt includes a blindspot instruction (surface anything that would change the work) in addition to requesting design directions", "passed": false, "evidence": "It only constrains preservation ('Don't touch routing, forms, analytics') without instructing Cursor to proactively surface anything that would change the work; and it does not request multiple design directions."}], "summary": {"passed": 3, "failed": 3, "total": 6, "pass_rate": 0.5}}}], "previous_feedback": {}, "previous_outputs": {}, "benchmark": {"metadata": {"skill_name": "prompt-push", "skill_path": "<path/to/skill>", "executor_model": "<model-name>", "analyzer_model": "<model-name>", "timestamp": "2026-07-05T22:20:52Z", "evals_run": [1, 2, 3, 4], "runs_per_configuration": 3}, "runs": [{"eval_id": 1, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 7, "failed": 0, "total": 7, "time_seconds": 109.1, "tokens": 35482, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** containing the full copyable prompt, delimited from surrounding prose."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "Whole response instructs Claude Code (explore repo, present menu, implement after confirm); it does not add auth itself."}, {"text": "Pushed prompt includes an explicit rule for when to ask vs when to proceed with assumptions", "passed": true, "evidence": "'Ask clarifying questions only when my answer would materially change the data model, UX flow, or security posture. Otherwise make a conservative assumption, state it briefly, and continue.'"}, {"text": "Pushed prompt routes discovery to the agent's own tools (inspect repo/files/deps) rather than asking the user everything or guessing", "passed": true, "evidence": "'Explore the repo before proposing anything. Find: the entry point / app factory, whether this is a server-rendered app... the ORM and migration setup... any existing User model...'"}, {"text": "Response contains no actual implementation code (no Python/Flask code that performs auth)", "passed": true, "evidence": "No Python/Flask code anywhere; only natural-language instructions and a security baseline listing (argon2/bcrypt, CSRF, cookie flags)."}, {"text": "Pushed prompt names concrete auth security specifics (e.g., password hashing algorithm, session/cookie hardening, CSRF) rather than only generic 'secure' language", "passed": true, "evidence": "'hash passwords with argon2 or bcrypt... set Secure, HttpOnly, and SameSite on the session cookie; add CSRF protection to every form (Flask-WTF)... same generic error... rate-limit failed logins...'"}, {"text": "Pushed prompt enumerates key auth decision forks as a concrete menu (e.g., auth method, credential/storage model, protected scope, definition of done) with options and a recommendation request, and asks which are in scope now vs deferred", "passed": true, "evidence": "'give me a decision menu... For each fork: list the realistic options, recommend the one that fits... 1. Auth approach... 2. Feature scope... 3. User storage...' then 'ask me which items are in scope now versus deferred.'"}], "notes": []}, {"eval_id": 2, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 80.1, "tokens": 33004, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** with the copyable prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "It instructs the agent to 'Find and fix the typo in my README' and scan the file; it does not itself edit any README."}, {"text": "Pushed prompt is calibrated small: roughly 8 lines or fewer inside the fenced block", "passed": true, "evidence": "The fenced block is a single compact paragraph (one logical line of directives), well under the 8-line ceiling."}, {"text": "Pushed prompt does NOT contain a full template apparatus (Context/Goal/Constraints/Unknowns/Working method/Quality bar all spelled out)", "passed": true, "evidence": "No labeled sections at all \u2014 one flowing paragraph, and the surrounding prose explicitly says 'Small, clear task \u2014 no template.'"}, {"text": "Pushed prompt is written in imperative voice: verb-first commands, not descriptive narration", "passed": true, "evidence": "Verb-first throughout: 'Find and fix... Scan the whole file... Leave code blocks... alone... Don't rewrite... End with a short before -> after list.'"}], "notes": []}, {"eval_id": 3, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 110.3, "tokens": 34960, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** with the full copyable prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "The response instructs the receiving model ('Teach me quantum computing from scratch...'); it does not carry out the teaching itself."}, {"text": "Response does not itself explain quantum computing (no substantive physics explanation outside the prompt block)", "passed": true, "evidence": "Prose outside the block is meta only (e.g. Diagnosis notes explainers 'repeat myths'); no substantive explanation of qubits/superposition is delivered outside the fenced prompt."}, {"text": "If the pushed prompt asks the target to research/search, it bounds it: finite source count, rounds, or an explicit stop condition", "passed": true, "evidence": "Search is scoped and gated, not open-ended: 'If you can search the web, verify current hardware milestones before citing them; if not, date-stamp those claims' \u2014 'before citing' is the stop condition and scope is limited to verifying milestones."}, {"text": "Pushed prompt specifies a concrete default audience/level (stated as a correctable assumption) rather than only a fill-in placeholder or an upfront question", "passed": true, "evidence": "'Assume I'm a curious adult with no physics background and rusty math \u2014 say so up front and correct course if I tell you otherwise, but don't wait to ask: start explaining.'"}], "notes": []}, {"eval_id": 4, "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 6, "failed": 0, "total": 6, "time_seconds": 107.2, "tokens": 34897, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ```text ... ``` fenced block under **Pushed Prompt** holds the full copyable prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "The response instructs Cursor to explore, propose directions, and implement; it does not redesign the page itself."}, {"text": "Pushed prompt requests 2-4 meaningfully different design directions/options before full implementation", "passed": true, "evidence": "'propose 3 meaningfully different visual directions... Build each as the redesigned hero plus one content section... on temporary preview routes... Wait for my pick before touching the production page.'"}, {"text": "Response contains no actual HTML/CSS implementation", "passed": true, "evidence": "No HTML/CSS code; frameworks (Tailwind, CSS modules) are named only as things to detect during exploration."}, {"text": "Pushed prompt includes an ask-vs-proceed or assumption-logging rule", "passed": true, "evidence": "'Ask me only when the answer would change the design direction or scope... otherwise make a conservative assumption, state it, and continue.' Plus explicit '(Assumption \u2014 tell me if...)' logging."}, {"text": "Pushed prompt includes a blindspot instruction (surface anything that would change the work) in addition to requesting design directions", "passed": true, "evidence": "'do a quick blindspot pass: surface anything that would change the work \u2014 SEO meta, analytics events, or form handlers wired into the current markup that a redesign could silently break; missing assets; brand constraints... List what you'll preserve.' \u2014 present alongside the 3-directions request."}], "notes": []}, {"eval_id": 1, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.7143, "passed": 5, "failed": 2, "total": 7, "time_seconds": 89.5, "tokens": 28793, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A ```text ... ``` fenced block under '## Improved prompt' holds the full copyable prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "The prompt directs Claude Code to build auth (User model, blueprint, tests) but the response does not itself write the auth code."}, {"text": "Pushed prompt includes an explicit rule for when to ask vs when to proceed with assumptions", "passed": false, "evidence": "Only a single conditional stop-and-ask ('If the app turns out to be a JSON API... stop and ask me whether I want token-based auth'); no general rule governing when to ask versus proceed on assumptions."}, {"text": "Pushed prompt routes discovery to the agent's own tools (inspect repo/files/deps) rather than asking the user everything or guessing", "passed": true, "evidence": "'FIRST, explore the codebase before writing any code, and tell me what you find: App structure... Database/ORM in use... Existing templates... How config and secrets are currently handled.'"}, {"text": "Response contains no actual implementation code (no Python/Flask code that performs auth)", "passed": true, "evidence": "Route/model specs are described in prose (e.g. 'User model: email (unique, indexed) + password hash'); no runnable Python/Flask code is present."}, {"text": "Pushed prompt names concrete auth security specifics (e.g., password hashing algorithm, session/cookie hardening, CSRF) rather than only generic 'secure' language", "passed": true, "evidence": "'Hash with werkzeug.security or bcrypt... CSRF protection on every form; Session cookies: HttpOnly, SameSite=Lax, Secure flag in production... open-redirect' validation."}, {"text": "Pushed prompt enumerates key auth decision forks as a concrete menu (e.g., auth method, credential/storage model, protected scope, definition of done) with options and a recommendation request, and asks which are in scope now vs deferred", "passed": false, "evidence": "The prompt pre-decides the fork ('Add session-based user authentication... using Flask-Login') and gives a fixed 'Out of scope' list; it does not present forks as an options menu with a recommendation request or ask which are in scope now vs deferred."}], "notes": []}, {"eval_id": 2, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 5, "failed": 0, "total": 5, "time_seconds": 48.0, "tokens": 25132, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "Two fenced code blocks; the primary recommended one is 'Fix the typo in README.md (repo root)... Don't change anything else.'"}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "It offers rewritten prompts and commentary on what changed; it does not itself fix any typo."}, {"text": "Pushed prompt is calibrated small: roughly 8 lines or fewer inside the fenced block", "passed": true, "evidence": "Primary block is a single line ('Fix the typo in README.md (repo root)... Don't change anything else.'); the alternate proofread block is also one line."}, {"text": "Pushed prompt does NOT contain a full template apparatus (Context/Goal/Constraints/Unknowns/Working method/Quality bar all spelled out)", "passed": true, "evidence": "Both blocks are one-line prompts with no labeled sections; the response even adds 'What I deliberately didn't add: No persona, no XML sections.'"}, {"text": "Pushed prompt is written in imperative voice: verb-first commands, not descriptive narration", "passed": true, "evidence": "Verb-first: 'Fix the typo in README.md...' / 'Proofread README.md for spelling and grammar mistakes and fix them.'"}], "notes": []}, {"eval_id": 3, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.6, "passed": 3, "failed": 2, "total": 5, "time_seconds": 73.7, "tokens": 27044, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": false, "evidence": "No fenced prompt block anywhere; the response only asks 'Which did you have in mind?' among send/save/answer options."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "It does not explain quantum computing; it merely offers to (option 3) and asks for direction. Clarifying-only response passes this on its own terms."}, {"text": "Response does not itself explain quantum computing (no substantive physics explanation outside the prompt block)", "passed": true, "evidence": "No physics content at all; the response is entirely about clarifying what 'push this prompt' means."}, {"text": "If the pushed prompt asks the target to research/search, it bounds it: finite source count, rounds, or an explicit stop condition", "passed": true, "evidence": "Vacuously true \u2014 there is no pushed prompt, so the research/search condition never applies."}, {"text": "Pushed prompt specifies a concrete default audience/level (stated as a correctable assumption) rather than only a fill-in placeholder or an upfront question", "passed": false, "evidence": "No pushed prompt is produced, so no default audience/level is stated anywhere; the response asks upfront which destination is meant instead."}], "notes": []}, {"eval_id": 4, "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 0.5, "passed": 3, "failed": 3, "total": 6, "time_seconds": 72.5, "tokens": 26707, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Response contains a fenced, paste-ready prompt block", "passed": true, "evidence": "A single ``` fenced block holds the full ready-to-paste Cursor prompt."}, {"text": "Response does not perform the underlying task itself", "passed": true, "evidence": "Despite detailed design specs, it is a prompt for Cursor to execute (plan then implement); the response writes no page itself."}, {"text": "Pushed prompt requests 2-4 meaningfully different design directions/options before full implementation", "passed": false, "evidence": "It commits to one direction ('modern and clean, in the spirit of Linear, Vercel, and Stripe') with fixed specs; the only checkpoint is 'show me a short plan... and wait for my approval' \u2014 a single-direction plan, not 2-4 options."}, {"text": "Response contains no actual HTML/CSS implementation", "passed": true, "evidence": "All specs are prose directives (e.g. '48-72px', 'border radius... 8px', '4/8px spacing scale'); no markup or CSS rules are written."}, {"text": "Pushed prompt includes an ask-vs-proceed or assumption-logging rule", "passed": false, "evidence": "No rule governing when to ask vs proceed on assumptions; the plan-then-approve gate is a review checkpoint, and 'placeholders marked TODO' only covers fabricated social proof, not a general assumption-logging rule."}, {"text": "Pushed prompt includes a blindspot instruction (surface anything that would change the work) in addition to requesting design directions", "passed": false, "evidence": "It only constrains preservation ('Don't touch routing, forms, analytics') without instructing Cursor to proactively surface anything that would change the work; and it does not request multiple design directions."}], "notes": []}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 101.675, "stddev": 14.4398, "min": 80.1, "max": 110.3}, "tokens": {"mean": 34585.75, "stddev": 1086.6058, "min": 33004, "max": 35482}}, "without_skill": {"pass_rate": {"mean": 0.7036, "stddev": 0.2161, "min": 0.5, "max": 1.0}, "time_seconds": {"mean": 70.925, "stddev": 17.1344, "min": 48.0, "max": 89.5}, "tokens": {"mean": 26919.0, "stddev": 1501.7561, "min": 25132, "max": 28793}}, "delta": {"pass_rate": "+0.30", "time_seconds": "+30.8", "tokens": "+7667"}}, "notes": []}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>

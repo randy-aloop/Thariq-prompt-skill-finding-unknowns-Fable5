@@ -101,10 +101,17 @@ This makes the receiving model more curious without letting it browse forever.
 
 `prompt-push` was tested against bare Claude models on the same prompt-rewriting tasks. The evals measured whether the response stayed a prompt, surfaced meaningful unknowns, avoided premature lock-in, routed taste and search correctly, and returned clean paste-ready output.
 
+![prompt-push eval comparison](evaluation/eval-comparison.svg)
+
+Full HTML reports:
+
+- [Opus 4.8 max mode eval](evaluation/eval-opus4.8.html)
+- [Fable 5 max mode eval](evaluation/eval-fable5.html)
+
 | Model / mode | Eval artifact | With skill | Without skill | Gap |
 | --- | --- | ---: | ---: | ---: |
-| Claude Opus 4.8 max mode | `iteration-5/review-opus.html` | 23/23 (100%) | 14/23 (59.5%) | +40 points |
-| Claude Fable 5 max mode | `iteration-6-fable5/eval-fable5.html` | 23/23 (100%) | 17/23 (70.4%) | +30 points |
+| Claude Opus 4.8 max mode | [eval-opus4.8.html](evaluation/eval-opus4.8.html) | 23/23 (100%) | 14/23 (59.5%) | +40 points |
+| Claude Fable 5 max mode | [eval-fable5.html](evaluation/eval-fable5.html) | 23/23 (100%) | 17/23 (70.4%) | +30 points |
 
 Main findings:
 
