@@ -1,6 +1,6 @@
 ---
 name: prompt-push
-description: Turn a rough, vague, or underspecified prompt into a stronger, ready-to-paste prompt for another LLM or coding agent. Use only when the user explicitly invokes prompt-push by name, says "prompt-push this", asks to use the prompt-push skill, or otherwise clearly calls for prompt-push. Once invoked, support rough intent for coding, design, research, writing, planning, learning, explanation, information gathering, comparison, "what is X", and topic understanding. The output is always a prompt for another model — never the answer to the task itself.
+description: Turn an explicitly invoked prompt-push request into a stronger, ready-to-paste prompt for another LLM or coding agent. Use only when the user names prompt-push, says "prompt-push this", or clearly asks to run/use the prompt-push skill. Once invoked, support coding, design, research, writing, planning, learning, explanation, comparison, "what is X", and information-gathering prompts. Output a prompt for another model, not the answer.
 ---
 
 # Prompt Push
@@ -9,9 +9,11 @@ You are producing a prompt, not performing the task. The user will paste your ou
 
 The goal is not a longer prompt. It is a prompt that carries more direction per line: intent, context, uncertainty handling, and judgment the receiving model can act on.
 
+The heart of every pushed prompt is making the receiving model surface the user's unknowns — the decision forks, hidden requirements, and risks the user couldn't name themselves. A pushed prompt that only restates what the user already knew has failed, however polished it reads.
+
 ## Process
 
-1. **Extract the map.** From the rough prompt, identify: goal, domain, audience, target model or agent, desired output, constraints, environment (repo, files, tools), explicit and implied preferences, and the decisions that could change the work.
+1. **Extract the map.** From the rough prompt, identify: goal, domain, audience, target model or agent, desired output, constraints, environment (repo, files, tools), explicit and implied preferences, the decisions that could change the work — and the user's starting point: their experience with the domain, codebase, or problem. Carry that disclosure into the pushed prompt ("I'm new to the auth modules", "I don't know what color grading is") — it sets how deep the receiving model's explanations and blindspot pass should go.
 2. **Classify the unknowns.** This is internal analysis — never put this taxonomy into the pushed prompt itself:
    - Known knowns: explicit facts from the rough prompt.
    - Known unknowns: visible open questions.
@@ -22,13 +24,21 @@ The goal is not a longer prompt. It is a prompt that carries more direction per 
 
 ## Calibrate weight to the task
 
-This is where pushed prompts most often go wrong. A small, clear task wrapped in an eleven-part template reads as noise and makes the receiving model slower, not better.
+Match prompt size to task size; a small task wrapped in a large template becomes noise.
 
 - **Small task** (single decision, clear outcome — "fix this CSS bug", "rename this function everywhere"): 3–6 lines. Goal, the one constraint that matters, an ask-vs-proceed rule, output expectation.
 - **Medium task** (a few open decisions): goal, context, constraints, the 2–3 unknowns worth naming, brief working method, output format.
 - **Large or ambiguous task** (architecture, unclear scope, taste-heavy): the full template.
 
 Never ship the full template out of habit. If the rough prompt is already good, tighten it and add uncertainty handling — don't inflate it.
+
+## Write like an operator
+
+Calibration bounds the length; this bounds the style. Short must not mean vague:
+
+- **Imperative voice.** Verb-first commands ("Check CI history first", "Propose 3 angles, then wait") — receiving models follow commands more reliably than descriptions of what could be done.
+- **Concrete beats abstract.** Name the specific files, libraries, risks, and checks a domain expert would insist on. "Handle auth securely" is noise; "hash passwords (bcrypt/argon2), harden session cookies, add CSRF protection" is direction. Specificity is direction, not bloat — when you cut words, don't cut expertise.
+- **Default, don't hedge.** When a stack or approach is unknown but guessable, state a concrete default and mark it as an assumption to correct, rather than staying generic.
 
 ## Know the target
 
@@ -50,15 +60,21 @@ Route each unknown one of five ways:
 - **Reference** — an example communicates the target better than prose.
 - **Proceed and log** — low-risk or reversible.
 
+Balance the constraint level as well as the routing. Over-specify and the receiving model follows instructions off a cliff when a pivot would be better; under-specify and it fills the gaps with generic best practices that may not fit. Constrain what is truly fixed, leave explicit room where discovery is still needed, and say which is which.
+
 ## Strategies
 
 Pick one primary strategy; combine when useful. Each has a paste-able core you can adapt into the pushed prompt.
 
 ### Blindspot Pass — the user may not know what they don't know
 
+Don't leave the blindspot pass abstract. The strongest form is an enumerated decision menu: name each fork that shapes the work, list its realistic options, and ask for a recommendation — that is what actually surfaces unknowns the user couldn't name.
+
 ```text
-Before proposing a solution, do a blindspot pass. Identify the assumptions, hidden constraints, domain issues, edge cases, and expert questions that could change the work. Separate them into: likely important, possibly important, safe to ignore for now. Then recommend the smallest next step that reduces the most uncertainty.
+Before writing anything, do a blindspot pass and surface the decisions that actually shape this work, as a concrete menu. For each: name the fork, list the realistic options, recommend the one that fits this project, and say why. Include the hidden requirements an expert would insist on and what "done" should include. End by asking me which items are in scope now versus deferred.
 ```
+
+Unless the task is small, include at least a one-line blindspot instruction even when another strategy leads ("First, do a quick blindspot pass and surface anything that would change the work") — surfacing the user's unknowns is the pushed prompt's core job, and the line is cheap.
 
 ### Interview — user answers would materially change the work
 
@@ -93,13 +109,13 @@ Create an implementation plan before editing. Lead with the decisions I am most 
 ### Executor — enough is known; the next agent should act decisively
 
 ```text
-Proceed with implementation. Make conservative assumptions for non-blocking ambiguity and log them. If you discover an edge case that forces a deviation from the plan, choose the safest local option, record the deviation, and continue unless it would create expensive wrong work.
+Proceed with implementation. Keep an implementation-notes.md file: make conservative assumptions for non-blocking ambiguity and log them there. If you discover an edge case that forces a deviation from the plan, choose the safest local option, record it under "Deviations", and continue unless it would create expensive wrong work. These notes become the map for next time.
 ```
 
 ### Review / Quiz — after the work is done
 
 ```text
-Explain the change so I can safely approve it. Include what changed, why, assumptions made, unresolved risks, and how to verify it. Then quiz me on the behavior and tradeoffs. The quiz should test real understanding, not trivia.
+Explain the change so I can safely approve it. Include what changed, why, assumptions made, unresolved risks, and how to verify it. Then quiz me on the behavior and tradeoffs. The quiz should test real understanding, not trivia. If others need to sign off, package the work into one doc that leads with the demo and answers up front the unknowns reviewers will start with.
 ```
 
 ## Full template
@@ -197,6 +213,7 @@ Before returning, verify the pushed prompt:
 - names the unknowns that matter and routes each one;
 - uses finite search for learning, explainer, comparison, or source-sensitive information tasks when the target can search;
 - specifies the output format and an observable quality bar;
+- is written as verb-first commands carrying expert-level specifics, not generic advice;
 - is calibrated — every section is earning its place;
 - and confirms you have not answered the rough prompt yourself.
 
