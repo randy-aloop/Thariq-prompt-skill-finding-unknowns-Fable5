@@ -1,6 +1,6 @@
 # Prompt Push: Finding Unknowns for Fable 5
 
-This repository contains `prompt-push`, a Codex skill inspired by Thariq's X article, [A Field Guide to Fable: Finding Your Unknowns](https://x.com/trq212/article/2073100352921215386).
+This repository contains `prompt-push`, a skill package inspired by Thariq's X article, [A Field Guide to Fable: Finding Your Unknowns](https://x.com/trq212/article/2073100352921215386).
 
 The article's central idea is simple and powerful: prompts are the map, real work is the territory, and the gap between them is made of unknowns. `prompt-push` turns that idea into a practical skill for rewriting rough user intent into a stronger prompt for another LLM or coding agent.
 
@@ -97,9 +97,15 @@ It should not ask for infinite search or "search until the bottom." Instead, it 
 
 This makes the receiving model more curious without letting it browse forever.
 
-## Install
+## Codex Version
 
-Copy `SKILL.md` into your Codex skills directory:
+The Codex package lives at:
+
+```text
+codex/prompt-push/SKILL.md
+```
+
+Copy that file into your Codex skills directory:
 
 ```text
 $CODEX_HOME/skills/prompt-push/SKILL.md
@@ -139,7 +145,7 @@ By default, `prompt-push` returns:
 
 ## Repository Contents
 
-- `SKILL.md`: the Codex skill
+- `codex/prompt-push/SKILL.md`: the Codex skill package
 - `claude/prompt-push/SKILL.md`: the Claude-oriented skill package
 - `README.md`: this overview and attribution
 
