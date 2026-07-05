@@ -29,27 +29,57 @@ Those gaps show up as:
 
 `prompt-push` helps the next model handle those gaps deliberately instead of guessing through them.
 
-## Workflow
+## Skill Diagram
 
 ```mermaid
 flowchart TD
-    A["Rough user prompt"] --> B["Extract the map"]
-    B --> C["Classify unknowns internally"]
-    C --> D["Know the target model"]
-    D --> E["Calibrate prompt weight"]
-    E --> F["Choose strategy"]
-    F --> G["Write pushed prompt"]
-    G --> H["Run final checklist"]
-    H --> I["Return ready-to-paste prompt"]
+    A["Rough user prompt"] --> B["Extract the map\nGoal, domain, audience, target model,\noutput, constraints, environment, preferences"]
+    B --> C["Classify unknowns internally\nKnown knowns / known unknowns /\nunknown knowns / unknown unknowns"]
+    C --> D["Know the target"]
+    D --> D1["Agent with tools\nRoute unknowns to exploration\nReference paths/files"]
+    D --> D2["Chat model without tools\nInline context\nUse bracketed placeholders"]
+    D --> D3["Unspecified\nWrite for capable general agent"]
 
-    F --> F1["Blindspot pass"]
-    F --> F2["Interview"]
-    F --> F3["Prototype"]
-    F --> F4["Reference"]
-    F --> F5["Finite search"]
-    F --> F6["Implementation plan"]
-    F --> F7["Executor"]
-    F --> F8["Review / quiz"]
+    D1 --> E["Calibrate weight"]
+    D2 --> E
+    D3 --> E
+
+    E --> E1["Small task\n3-6 lines"]
+    E --> E2["Medium task\nGoal + context + 2-3 unknowns + method"]
+    E --> E3["Large/ambiguous task\nFull template"]
+
+    E1 --> F["Route uncertainty"]
+    E2 --> F
+    E3 --> F
+
+    F --> F1["Ask\nUser knows and answer changes work"]
+    F --> F2["Explore\nDiscoverable from files/code/docs/logs/web"]
+    F --> F3["Prototype\nUser knows after seeing options"]
+    F --> F4["Reference\nExample communicates better than prose"]
+    F --> F5["Finite search\nSource-sensitive learning or comparison"]
+    F --> F6["Proceed and log\nLow-risk or reversible"]
+
+    F --> G["Choose primary strategy"]
+    G --> G1["Blindspot Pass"]
+    G --> G2["Interview"]
+    G --> G3["Prototype"]
+    G --> G4["Reference"]
+    G --> G5["Finite Search"]
+    G --> G6["Implementation Plan"]
+    G --> G7["Executor"]
+    G --> G8["Review / Quiz"]
+
+    G1 --> H["Write pushed prompt"]
+    G2 --> H
+    G3 --> H
+    G4 --> H
+    G5 --> H
+    G6 --> H
+    G7 --> H
+    G8 --> H
+
+    H --> I["Final checklist\nPaste-ready, first action clear,\nask/proceed rule, routed unknowns,\nfinite search when useful,\noutput format, quality bar,\nno solved task"]
+    I --> J["Return response\nDiagnosis / Strategy / Pushed Prompt / Optional Additions"]
 ```
 
 ## Finite Search Behavior
