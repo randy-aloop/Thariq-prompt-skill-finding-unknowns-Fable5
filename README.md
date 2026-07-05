@@ -31,6 +31,8 @@ Those gaps show up as:
 
 ## Skill Diagram
 
+rough prompt = map → real task = territory → unknowns = gap → pushed prompt = instructions that make the next model handle the gap deliberately.
+
 ```mermaid
 flowchart TD
     A["Explicit prompt-push invocation"] --> B{"Is the user asking for a better prompt?"}
