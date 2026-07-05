@@ -107,6 +107,16 @@ $CODEX_HOME/skills/prompt-push/SKILL.md
 
 Then restart Codex so the skill metadata is loaded.
 
+## Claude Version
+
+A Claude-oriented package lives at:
+
+```text
+claude/prompt-push/SKILL.md
+```
+
+Use or upload the `claude/prompt-push` folder in your Claude skill setup. This version preserves the same prompt-push workflow while removing Codex-specific installation assumptions and wording the target as Claude, Claude Code, another LLM, or another coding agent.
+
 ## Invocation
 
 The skill is intentionally narrow-triggered. Invoke it explicitly:
@@ -130,6 +140,7 @@ By default, `prompt-push` returns:
 ## Repository Contents
 
 - `SKILL.md`: the Codex skill
+- `claude/prompt-push/SKILL.md`: the Claude-oriented skill package
 - `README.md`: this overview and attribution
 
 ## Attribution
